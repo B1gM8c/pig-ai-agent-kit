@@ -62,7 +62,7 @@ Windows PowerShell:
 $env:PIGAI_API_KEY = "<YOUR_PIGAI_API_KEY>"
 ```
 
-Supply the API key only through the `PIGAI_API_KEY` environment variable. Never put a real key in a repository, configuration file, chat, command-line argument, or screenshot. The public Base URL is `https://www.pigsec.cn/openapi/v1/ai`; `PIGAI_BASE_URL` remains the API origin `https://www.pigsec.cn`, and MCP appends `/openapi/v1/ai` automatically.
+Prefer supplying the API key through the host process's `PIGAI_API_KEY` environment variable. Never put a real key in a repository, shared configuration, chat, command-line argument, or screenshot. The public Base URL is `https://www.pigsec.cn/openapi/v1/ai`; `PIGAI_BASE_URL` remains the API origin `https://www.pigsec.cn`, and MCP appends `/openapi/v1/ai` automatically.
 
 Environment variables:
 
@@ -108,7 +108,7 @@ The preferred Claude Desktop distribution format is an `.mcpb` package with the 
 }
 ```
 
-This fallback stores the key in the local Claude configuration. Do not commit or share that file, and restrict its file permissions. Fully quit and reopen Claude Desktop after editing it.
+This fallback stores the key as plaintext in the local Claude configuration, so use it only on a protected personal device. Do not commit, share, sync, or back up that file; restrict its file permissions. Create a separate key with only the exact required scopes and rotate it regularly. Fully quit and reopen Claude Desktop after editing it.
 
 #### Cursor
 

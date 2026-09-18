@@ -62,7 +62,7 @@ Windows PowerShell：
 $env:PIGAI_API_KEY = "<YOUR_PIGAI_API_KEY>"
 ```
 
-API Key 只通过 `PIGAI_API_KEY` 环境变量提供。不要把真实 Key 写入仓库、配置文件、聊天内容、命令行参数或截图。公开 Base URL 为 `https://www.pigsec.cn/openapi/v1/ai`；`PIGAI_BASE_URL` 保持为 API origin `https://www.pigsec.cn`，MCP 会自动追加 `/openapi/v1/ai`。
+首选由宿主进程通过 `PIGAI_API_KEY` 环境变量提供 API Key。绝不要把真实 Key 写入仓库、共享配置、聊天内容、命令行参数或截图。公开 Base URL 为 `https://www.pigsec.cn/openapi/v1/ai`；`PIGAI_BASE_URL` 保持为 API origin `https://www.pigsec.cn`，MCP 会自动追加 `/openapi/v1/ai`。
 
 环境变量：
 
@@ -108,7 +108,7 @@ Claude Desktop 的推荐分发形式是可将 API Key 标记为敏感字段的 `
 }
 ```
 
-该 fallback 会把 Key 保存在本机 Claude 配置中；不要提交或分享此文件，并限制其文件权限。修改后完全退出并重新打开 Claude Desktop。
+该 fallback 会把 Key 以明文保存在本机 Claude 配置中，仅应在受保护的个人设备上使用。不要提交、共享、同步或备份此文件，限制其文件权限；建议创建仅授予实际需要的具体 scope 的独立 Key 并定期轮换。修改后完全退出并重新打开 Claude Desktop。
 
 #### Cursor
 
