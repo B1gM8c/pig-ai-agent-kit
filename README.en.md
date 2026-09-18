@@ -4,7 +4,7 @@
 
 Pig AI Agent Kit is a fully independent, open-source client toolkit that lets MCP-capable clients such as Codex, Claude Desktop, and Cursor generate images and videos through the public Pig AI API.
 
-> **Rollout status:** The source is available for review and local builds, but the production `https://www.pigsec.cn/openapi/v1/ai/*` endpoints are not live yet and this project has not published its first stable release. The default configuration must not be treated as production-ready. This notice will be removed and official downloads added after both the production API and stable release are ready.
+> **Rollout status:** The [`v0.1.0-beta.1`](https://github.com/B1gM8c/pig-ai-agent-kit/releases/tag/v0.1.0-beta.1) pre-release provides downloadable MCP, Skill, and checksum assets, but the production `https://www.pigsec.cn/openapi/v1/ai/*` endpoints are not live yet. The default configuration must not be treated as production-ready. This notice will be removed after both the production API and first stable release are ready.
 
 This repository contains only:
 
@@ -26,9 +26,11 @@ Sign in to the [Pig AI developer center](https://www.pigsec.cn/ai/developer/keys
 
 Image and video generation uses the same server-side Pig AI points account as the web application. Use `preview_billing` before submission when you need an estimate. Final charges, refunds, and usage records are determined by the server ledger.
 
-### 2. Build MCP from source
+### 2. Download or build MCP
 
-The first stable release is not available yet. For now, use Go 1.25.14 or newer to build from source:
+Download the [`v0.1.0-beta.1`](https://github.com/B1gM8c/pig-ai-agent-kit/releases/tag/v0.1.0-beta.1) pre-release for macOS, Linux, or Windows on amd64/arm64. It also includes a source archive and [`checksums.txt`](https://github.com/B1gM8c/pig-ai-agent-kit/releases/download/v0.1.0-beta.1/checksums.txt). Verify the SHA-256 checksum before extracting the archive, then configure your host with the absolute path to `pig-ai-mcp` (`pig-ai-mcp.exe` on Windows).
+
+You can also build from source with Go 1.25.14 or newer:
 
 ```bash
 git clone https://github.com/B1gM8c/pig-ai-agent-kit.git
@@ -44,7 +46,7 @@ New-Item -ItemType Directory -Force .\bin | Out-Null
 go build -o .\bin\pig-ai-mcp.exe .\cmd\pig-ai-mcp
 ```
 
-Stable releases will provide binaries for each supported operating system and CPU architecture, `checksums.txt`, and a versioned source archive. Until then, do not use `releases/latest` as an installation endpoint.
+`releases/latest` resolves only to a stable release, not to this pre-release. Use the fixed version link above until the first stable release is published.
 
 ### 3. Configure the API key
 
@@ -130,7 +132,7 @@ Save [examples/cursor-mcp.json](examples/cursor-mcp.json) as `.cursor/mcp.json` 
 
 ### 5. Install the Skill
 
-The first stable release is not available yet. For now, install the Skill from a cloned checkout:
+Download [`pig-ai-skill.zip`](https://github.com/B1gM8c/pig-ai-agent-kit/releases/download/v0.1.0-beta.1/pig-ai-skill.zip) and extract the installable `pig-ai` directory, or install it from a cloned checkout:
 
 ```bash
 mkdir -p "$HOME/.agents/skills"
@@ -144,7 +146,7 @@ New-Item -ItemType Directory -Force "$HOME\.agents\skills" | Out-Null
 Copy-Item -Recurse -Force "skills\pig-ai" "$HOME\.agents\skills"
 ```
 
-A stable `pig-ai-skill.zip` asset and a versioned Skill archive will be added with the first stable release. Do not use the currently nonexistent `releases/latest` download URL.
+The pre-release provides both `pig-ai-skill.zip` and the versioned `pig-ai-skill_0.1.0-beta.1.zip` archive. Use the fixed version URL above until the first stable release is published.
 
 For a repository-scoped Skill, copy `skills/pig-ai` to `.agents/skills/pig-ai` in that repository. Skill changes are normally detected automatically; restart the host if it does not appear.
 

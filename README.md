@@ -4,7 +4,7 @@
 
 Pig AI Agent Kit 是一套完全独立、开源的客户端工具，让 Codex、Claude Desktop、Cursor 等支持 MCP 的客户端通过 Pig AI 公开 API 生成图片和视频。
 
-> **Rollout 状态：**源码目前可审阅和构建，但生产环境的 `https://www.pigsec.cn/openapi/v1/ai/*` 尚未上线，本项目也尚未发布首个稳定 Release。当前默认配置因此不能视为已经可用。生产 API 与稳定 Release 均就绪后会移除此提示并补充正式下载说明。
+> **Rollout 状态：**[`v0.1.0-beta.1`](https://github.com/B1gM8c/pig-ai-agent-kit/releases/tag/v0.1.0-beta.1) 预发布版提供可下载的 MCP、Skill 和校验和，但生产环境的 `https://www.pigsec.cn/openapi/v1/ai/*` 尚未上线，因此当前默认配置不能视为生产可用。生产 API 与首个稳定 Release 均就绪后会移除此提示。
 
 本仓库只包含：
 
@@ -26,9 +26,11 @@ Pig AI Agent Kit 是一套完全独立、开源的客户端工具，让 Codex、
 
 生成图片或视频会使用与 Pig AI 网页端相同的服务端积分账户。正式提交前可通过 `preview_billing` 查看预估扣费；最终扣费、退款和消费记录以服务端账本为准。
 
-### 2. 从源码构建 MCP
+### 2. 下载或构建 MCP
 
-首个稳定 Release 尚未发布，当前请使用 Go 1.25.14 或更高版本从源码构建：
+预发布安装包可从 [`v0.1.0-beta.1`](https://github.com/B1gM8c/pig-ai-agent-kit/releases/tag/v0.1.0-beta.1) 下载，包含 macOS、Linux、Windows 的 amd64/arm64 构建、源码包和 [`checksums.txt`](https://github.com/B1gM8c/pig-ai-agent-kit/releases/download/v0.1.0-beta.1/checksums.txt)。下载后请先核对 SHA-256，再解压并在客户端配置中使用 `pig-ai-mcp`（Windows 为 `pig-ai-mcp.exe`）的绝对路径。
+
+也可以使用 Go 1.25.14 或更高版本从源码构建：
 
 ```bash
 git clone https://github.com/B1gM8c/pig-ai-agent-kit.git
@@ -44,7 +46,7 @@ New-Item -ItemType Directory -Force .\bin | Out-Null
 go build -o .\bin\pig-ai-mcp.exe .\cmd\pig-ai-mcp
 ```
 
-稳定发布后将提供各操作系统和 CPU 架构的二进制、`checksums.txt` 及版本化源码归档；在此之前不要使用 `releases/latest` 作为安装入口。
+`releases/latest` 只指向稳定版本，不会指向当前预发布版；首个稳定 Release 上线前请使用上面的固定版本链接。
 
 ### 3. 配置 API Key
 
@@ -130,7 +132,7 @@ Claude Desktop 的推荐分发形式是可将 API Key 标记为敏感字段的 `
 
 ### 5. 安装 Skill
 
-首个稳定 Release 尚未发布，当前请从已克隆的源码安装：
+直接下载 [`pig-ai-skill.zip`](https://github.com/B1gM8c/pig-ai-agent-kit/releases/download/v0.1.0-beta.1/pig-ai-skill.zip)，解压后得到可安装的 `pig-ai` 目录。也可以从已克隆的源码安装：
 
 ```bash
 mkdir -p "$HOME/.agents/skills"
@@ -144,7 +146,7 @@ New-Item -ItemType Directory -Force "$HOME\.agents\skills" | Out-Null
 Copy-Item -Recurse -Force "skills\pig-ai" "$HOME\.agents\skills"
 ```
 
-稳定发布后会同时提供固定文件名 `pig-ai-skill.zip` 和版本化 Skill 归档；当前不要使用尚不存在的 `releases/latest` 下载地址。
+预发布版同时提供固定文件名 `pig-ai-skill.zip` 和版本化归档 `pig-ai-skill_0.1.0-beta.1.zip`。首个稳定 Release 上线前，请使用上面的固定版本下载地址。
 
 项目内共享时，将 `skills/pig-ai` 复制到仓库的 `.agents/skills/pig-ai`。Skill 变更通常会被自动发现；未出现时请重启客户端。
 
