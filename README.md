@@ -4,7 +4,7 @@
 
 Pig AI Agent Kit 是一套完全独立、开源的客户端工具，让 Codex、Claude Desktop、Cursor 等支持 MCP 的客户端通过 Pig AI 公开 API 生成图片和视频。
 
-> **Rollout 状态：**[`v0.1.0-beta.1`](https://github.com/B1gM8c/pig-ai-agent-kit/releases/tag/v0.1.0-beta.1) 预发布版提供可下载的 MCP、Skill 和校验和，但生产环境的 `https://www.pigsec.cn/openapi/v1/ai/*` 尚未上线，因此当前默认配置不能视为生产可用。生产 API 与首个稳定 Release 均就绪后会移除此提示。
+> **Rollout 状态：**[`v0.1.0-beta.2`](https://github.com/B1gM8c/pig-ai-agent-kit/releases/tag/v0.1.0-beta.2) 预发布版提供可下载的 MCP、Skill 和校验和。生产 API 已可用，公开 Base URL 为 `https://www.pigsec.cn/openapi/v1/ai`，所有公开接口使用 `X-API-Key` 认证。
 
 本仓库只包含：
 
@@ -18,7 +18,7 @@ Pig AI Agent Kit 是一套完全独立、开源的客户端工具，让 Codex、
 
 ## 快速开始
 
-正式上线后的完整流程是：创建 API Key → 获取 MCP → 配置环境变量和客户端 → 安装 Skill → 调用 `list_models` 验证。当前阶段仅支持源码审阅、构建和非生产测试。
+生产环境的完整流程是：创建 API Key → 获取 MCP → 配置环境变量和客户端 → 安装 Skill → 调用 `list_models` 验证。公开 Base URL 为 `https://www.pigsec.cn/openapi/v1/ai`；MCP 默认使用 `https://www.pigsec.cn` 作为 API origin，并自动追加该路径。
 
 ### 1. 创建 API Key
 
@@ -28,7 +28,7 @@ Pig AI Agent Kit 是一套完全独立、开源的客户端工具，让 Codex、
 
 ### 2. 下载或构建 MCP
 
-预发布安装包可从 [`v0.1.0-beta.1`](https://github.com/B1gM8c/pig-ai-agent-kit/releases/tag/v0.1.0-beta.1) 下载，包含 macOS、Linux、Windows 的 amd64/arm64 构建、源码包和 [`checksums.txt`](https://github.com/B1gM8c/pig-ai-agent-kit/releases/download/v0.1.0-beta.1/checksums.txt)。下载后请先核对 SHA-256，再解压并在客户端配置中使用 `pig-ai-mcp`（Windows 为 `pig-ai-mcp.exe`）的绝对路径。
+预发布安装包可从 [`v0.1.0-beta.2`](https://github.com/B1gM8c/pig-ai-agent-kit/releases/tag/v0.1.0-beta.2) 下载，包含 macOS、Linux、Windows 的 amd64/arm64 构建、源码包和 [`checksums.txt`](https://github.com/B1gM8c/pig-ai-agent-kit/releases/download/v0.1.0-beta.2/checksums.txt)。下载后请先核对 SHA-256，再解压并在客户端配置中使用 `pig-ai-mcp`（Windows 为 `pig-ai-mcp.exe`）的绝对路径。
 
 也可以使用 Go 1.25.14 或更高版本从源码构建：
 
@@ -62,7 +62,7 @@ Windows PowerShell：
 $env:PIGAI_API_KEY = "<YOUR_PIGAI_API_KEY>"
 ```
 
-不要把真实 Key 写入仓库、聊天内容、命令行参数或截图。`PIGAI_BASE_URL` 预设为计划中的生产地址 `https://www.pigsec.cn`；OpenAPI rollout 完成前，该默认配置还不能用于生产调用。
+API Key 只通过 `PIGAI_API_KEY` 环境变量提供。不要把真实 Key 写入仓库、配置文件、聊天内容、命令行参数或截图。公开 Base URL 为 `https://www.pigsec.cn/openapi/v1/ai`；`PIGAI_BASE_URL` 保持为 API origin `https://www.pigsec.cn`，MCP 会自动追加 `/openapi/v1/ai`。
 
 环境变量：
 
@@ -72,7 +72,7 @@ $env:PIGAI_API_KEY = "<YOUR_PIGAI_API_KEY>"
 | `PIGAI_DOWNLOAD_DIR` | 用户缓存目录下的 `pig-ai-mcp/downloads` | 结果下载目录，必须是绝对路径。 |
 | `PIGAI_HTTP_TIMEOUT` | `60s` | 单次 HTTP 请求超时，最大 `10m`。 |
 | `PIGAI_MAX_DOWNLOAD_BYTES` | `1073741824` | 单个结果的最大下载字节数。 |
-| `PIGAI_BASE_URL` | `https://www.pigsec.cn` | 计划中的生产 API 地址；当前 OpenAPI 尚未上线。 |
+| `PIGAI_BASE_URL` | `https://www.pigsec.cn` | API origin；MCP 自动追加 `/openapi/v1/ai`。公开 Base URL 为 `https://www.pigsec.cn/openapi/v1/ai`。 |
 | `PIGAI_ALLOW_CUSTOM_BASE_URL` | `false` | 自定义 `PIGAI_BASE_URL` 的显式开关。远程地址必须使用 HTTPS；HTTP 仅允许 loopback 测试地址。 |
 
 ### 4. 连接 MCP 客户端
@@ -132,7 +132,7 @@ Claude Desktop 的推荐分发形式是可将 API Key 标记为敏感字段的 `
 
 ### 5. 安装 Skill
 
-直接下载 [`pig-ai-skill.zip`](https://github.com/B1gM8c/pig-ai-agent-kit/releases/download/v0.1.0-beta.1/pig-ai-skill.zip)，解压后得到可安装的 `pig-ai` 目录。也可以从已克隆的源码安装：
+直接下载 [`pig-ai-skill.zip`](https://github.com/B1gM8c/pig-ai-agent-kit/releases/download/v0.1.0-beta.2/pig-ai-skill.zip)，解压后得到可安装的 `pig-ai` 目录。也可以从已克隆的源码安装：
 
 ```bash
 mkdir -p "$HOME/.agents/skills"
@@ -146,7 +146,7 @@ New-Item -ItemType Directory -Force "$HOME\.agents\skills" | Out-Null
 Copy-Item -Recurse -Force "skills\pig-ai" "$HOME\.agents\skills"
 ```
 
-预发布版同时提供固定文件名 `pig-ai-skill.zip` 和版本化归档 `pig-ai-skill_0.1.0-beta.1.zip`。首个稳定 Release 上线前，请使用上面的固定版本下载地址。
+预发布版同时提供固定文件名 `pig-ai-skill.zip` 和版本化归档 `pig-ai-skill_0.1.0-beta.2.zip`。首个稳定 Release 上线前，请使用上面的固定版本下载地址。
 
 项目内共享时，将 `skills/pig-ai` 复制到仓库的 `.agents/skills/pig-ai`。Skill 变更通常会被自动发现；未出现时请重启客户端。
 

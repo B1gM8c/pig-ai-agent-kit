@@ -4,7 +4,7 @@
 
 Pig AI Agent Kit is a fully independent, open-source client toolkit that lets MCP-capable clients such as Codex, Claude Desktop, and Cursor generate images and videos through the public Pig AI API.
 
-> **Rollout status:** The [`v0.1.0-beta.1`](https://github.com/B1gM8c/pig-ai-agent-kit/releases/tag/v0.1.0-beta.1) pre-release provides downloadable MCP, Skill, and checksum assets, but the production `https://www.pigsec.cn/openapi/v1/ai/*` endpoints are not live yet. The default configuration must not be treated as production-ready. This notice will be removed after both the production API and first stable release are ready.
+> **Rollout status:** The [`v0.1.0-beta.2`](https://github.com/B1gM8c/pig-ai-agent-kit/releases/tag/v0.1.0-beta.2) pre-release provides downloadable MCP, Skill, and checksum assets. The production API is available at the public Base URL `https://www.pigsec.cn/openapi/v1/ai`, and all public endpoints use `X-API-Key` authentication.
 
 This repository contains only:
 
@@ -18,7 +18,7 @@ There is no separate "agent executable" to download. `skills/pig-ai/agents/opena
 
 ## Quick start
 
-After production rollout, the complete flow will be: create an API key → obtain MCP → configure the environment and host → install the Skill → verify with `list_models`. The current phase supports source review, local builds, and non-production testing only.
+The production flow is: create an API key → obtain MCP → configure the environment and host → install the Skill → verify with `list_models`. The public Base URL is `https://www.pigsec.cn/openapi/v1/ai`; MCP uses `https://www.pigsec.cn` as its API origin and appends that path automatically.
 
 ### 1. Create an API key
 
@@ -28,7 +28,7 @@ Image and video generation uses the same server-side Pig AI points account as th
 
 ### 2. Download or build MCP
 
-Download the [`v0.1.0-beta.1`](https://github.com/B1gM8c/pig-ai-agent-kit/releases/tag/v0.1.0-beta.1) pre-release for macOS, Linux, or Windows on amd64/arm64. It also includes a source archive and [`checksums.txt`](https://github.com/B1gM8c/pig-ai-agent-kit/releases/download/v0.1.0-beta.1/checksums.txt). Verify the SHA-256 checksum before extracting the archive, then configure your host with the absolute path to `pig-ai-mcp` (`pig-ai-mcp.exe` on Windows).
+Download the [`v0.1.0-beta.2`](https://github.com/B1gM8c/pig-ai-agent-kit/releases/tag/v0.1.0-beta.2) pre-release for macOS, Linux, or Windows on amd64/arm64. It also includes a source archive and [`checksums.txt`](https://github.com/B1gM8c/pig-ai-agent-kit/releases/download/v0.1.0-beta.2/checksums.txt). Verify the SHA-256 checksum before extracting the archive, then configure your host with the absolute path to `pig-ai-mcp` (`pig-ai-mcp.exe` on Windows).
 
 You can also build from source with Go 1.25.14 or newer:
 
@@ -62,7 +62,7 @@ Windows PowerShell:
 $env:PIGAI_API_KEY = "<YOUR_PIGAI_API_KEY>"
 ```
 
-Never put a real key in a repository, chat, command-line argument, or screenshot. `PIGAI_BASE_URL` is preset to the planned production origin, `https://www.pigsec.cn`; the default cannot make production OpenAPI calls until rollout is complete.
+Supply the API key only through the `PIGAI_API_KEY` environment variable. Never put a real key in a repository, configuration file, chat, command-line argument, or screenshot. The public Base URL is `https://www.pigsec.cn/openapi/v1/ai`; `PIGAI_BASE_URL` remains the API origin `https://www.pigsec.cn`, and MCP appends `/openapi/v1/ai` automatically.
 
 Environment variables:
 
@@ -72,7 +72,7 @@ Environment variables:
 | `PIGAI_DOWNLOAD_DIR` | `pig-ai-mcp/downloads` under the user cache directory | Result directory; must be an absolute path. |
 | `PIGAI_HTTP_TIMEOUT` | `60s` | Per-request HTTP timeout, up to `10m`. |
 | `PIGAI_MAX_DOWNLOAD_BYTES` | `1073741824` | Maximum bytes for one downloaded result. |
-| `PIGAI_BASE_URL` | `https://www.pigsec.cn` | Planned production API origin; the OpenAPI endpoints are not live yet. |
+| `PIGAI_BASE_URL` | `https://www.pigsec.cn` | API origin; MCP appends `/openapi/v1/ai`. The public Base URL is `https://www.pigsec.cn/openapi/v1/ai`. |
 | `PIGAI_ALLOW_CUSTOM_BASE_URL` | `false` | Explicit opt-in for a custom `PIGAI_BASE_URL`. Remote URLs must use HTTPS; HTTP is limited to loopback test fixtures. |
 
 ### 4. Connect an MCP host
@@ -132,7 +132,7 @@ Save [examples/cursor-mcp.json](examples/cursor-mcp.json) as `.cursor/mcp.json` 
 
 ### 5. Install the Skill
 
-Download [`pig-ai-skill.zip`](https://github.com/B1gM8c/pig-ai-agent-kit/releases/download/v0.1.0-beta.1/pig-ai-skill.zip) and extract the installable `pig-ai` directory, or install it from a cloned checkout:
+Download [`pig-ai-skill.zip`](https://github.com/B1gM8c/pig-ai-agent-kit/releases/download/v0.1.0-beta.2/pig-ai-skill.zip) and extract the installable `pig-ai` directory, or install it from a cloned checkout:
 
 ```bash
 mkdir -p "$HOME/.agents/skills"
@@ -146,7 +146,7 @@ New-Item -ItemType Directory -Force "$HOME\.agents\skills" | Out-Null
 Copy-Item -Recurse -Force "skills\pig-ai" "$HOME\.agents\skills"
 ```
 
-The pre-release provides both `pig-ai-skill.zip` and the versioned `pig-ai-skill_0.1.0-beta.1.zip` archive. Use the fixed version URL above until the first stable release is published.
+The pre-release provides both `pig-ai-skill.zip` and the versioned `pig-ai-skill_0.1.0-beta.2.zip` archive. Use the fixed version URL above until the first stable release is published.
 
 For a repository-scoped Skill, copy `skills/pig-ai` to `.agents/skills/pig-ai` in that repository. Skill changes are normally detected automatically; restart the host if it does not appear.
 

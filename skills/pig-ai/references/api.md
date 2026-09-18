@@ -8,12 +8,14 @@ responses, and redacts credentials from errors. It declares input schemas but
 does not impose an independent output schema: successful tool content is the
 server's current `data` JSON, so do not invent fields missing from a response.
 
-The planned production API origin is `https://www.pigsec.cn`, but its
-`/openapi/v1/ai/*` endpoints are not live yet. `PIGAI_BASE_URL` should normally
-remain unset once production rollout is complete. Any custom base URL,
-including a loopback fixture, requires `PIGAI_ALLOW_CUSTOM_BASE_URL=true`.
-Remote custom origins must use HTTPS; plain HTTP is accepted only for loopback
-test fixtures.
+The production API is available at the public Base URL
+`https://www.pigsec.cn/openapi/v1/ai`. The public OpenAPI specification exposes
+the eight `/openapi/v1/ai/*` paths listed below, all authenticated with
+`X-API-Key`. The MCP client's `PIGAI_BASE_URL` is the API origin
+`https://www.pigsec.cn`; the client appends `/openapi/v1/ai` automatically, so
+it should normally remain unset. Any custom base URL, including a loopback
+fixture, requires `PIGAI_ALLOW_CUSTOM_BASE_URL=true`. Remote custom origins
+must use HTTPS; plain HTTP is accepted only for loopback test fixtures.
 
 ## Tool index and scopes
 
