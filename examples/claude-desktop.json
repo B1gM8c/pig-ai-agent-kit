@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "pig-ai": {
+      "command": "/ABSOLUTE/PATH/TO/pig-ai-mcp",
+      "env": {
+        "PIGAI_API_KEY": "<YOUR_PIGAI_API_KEY>"
+      }
+    }
+  }
+}

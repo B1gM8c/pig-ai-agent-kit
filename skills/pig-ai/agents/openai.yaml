@@ -1,0 +1,7 @@
+interface:
+  display_name: "Pig AI Image & Video"
+  short_description: "通过 Pig AI MCP 生成图片、视频并核对积分结算"
+  default_prompt: "Use $pig-ai to preview the cost, create an image or video, and reconcile the final result."
+
+policy:
+  allow_implicit_invocation: true

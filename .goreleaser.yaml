@@ -1,0 +1,95 @@
+version: 2
+
+project_name: pig-ai-agent-kit
+
+builds:
+  - id: pig-ai-mcp
+    main: ./cmd/pig-ai-mcp
+    binary: pig-ai-mcp
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - darwin
+      - linux
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w
+      - -X main.serverVersion={{ .Version }}
+    mod_timestamp: "{{ .CommitTimestamp }}"
+
+archives:
+  - id: pig-ai-mcp
+    ids:
+      - pig-ai-mcp
+    formats:
+      - tar.gz
+    format_overrides:
+      - goos: windows
+        formats:
+          - zip
+    name_template: >-
+      pig-ai-mcp_{{ .Version }}_{{ .Os }}_{{ .Arch }}
+    files:
+      - README.md
+      - README.en.md
+      - LICENSE
+      - SECURITY.md
+      - CONTRIBUTING.md
+      - THIRD_PARTY_NOTICES.md
+      - examples/*
+
+  - id: pig-ai-skill
+    meta: true
+    formats:
+      - zip
+    name_template: pig-ai-skill_{{ .Version }}
+    wrap_in_directory: pig-ai
+    files:
+      - src: skills/pig-ai/SKILL.md
+        dst: SKILL.md
+      - src: skills/pig-ai/agents/*
+        dst: agents
+      - src: skills/pig-ai/references/*
+        dst: references
+
+  - id: pig-ai-skill-latest
+    meta: true
+    formats:
+      - zip
+    name_template: pig-ai-skill
+    wrap_in_directory: pig-ai
+    files:
+      - src: skills/pig-ai/SKILL.md
+        dst: SKILL.md
+      - src: skills/pig-ai/agents/*
+        dst: agents
+      - src: skills/pig-ai/references/*
+        dst: references
+
+source:
+  enabled: true
+  name_template: pig-ai-agent-kit_{{ .Version }}_source
+  format: tar.gz
+  prefix_template: pig-ai-agent-kit-{{ .Version }}/
+
+checksum:
+  name_template: checksums.txt
+  algorithm: sha256
+
+changelog:
+  use: git
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^chore:"
+
+release:
+  draft: false
+  prerelease: auto

@@ -1,0 +1,9 @@
+/dist/
+/bin/
+/pig-ai-mcp
+*.test
+coverage.out
+
+.DS_Store
+.idea/
+.vscode/

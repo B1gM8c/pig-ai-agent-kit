@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "pig-ai": {
+      "type": "stdio",
+      "command": "/ABSOLUTE/PATH/TO/pig-ai-mcp",
+      "env": {
+        "PIGAI_API_KEY": "${env:PIGAI_API_KEY}"
+      }
+    }
+  }
+}

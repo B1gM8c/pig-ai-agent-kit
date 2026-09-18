@@ -1,0 +1,5 @@
+# Merge this table into ~/.codex/config.toml.
+# Set PIGAI_API_KEY in the environment before starting Codex.
+[mcp_servers.pig-ai]
+command = "/ABSOLUTE/PATH/TO/pig-ai-mcp"
+env_vars = ["PIGAI_API_KEY"]
