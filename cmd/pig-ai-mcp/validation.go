@@ -157,7 +157,11 @@ func validateVideoInput(input VideoInput) error {
 	if err := validateIdempotencyKey(input.IdempotencyKey); err != nil {
 		return err
 	}
-	if err := validatePrompt(input.Prompt); err != nil {
+	if input.Workflow == "multiframe2video" {
+		if strings.TrimSpace(input.Prompt) != "" {
+			return &ValidationError{Field: "prompt", Reason: "must be empty for multiframe2video; use transitions[].prompt"}
+		}
+	} else if err := validatePrompt(input.Prompt); err != nil {
 		return err
 	}
 	if input.Duration < 0 || input.Duration > 3600 {

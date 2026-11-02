@@ -123,7 +123,7 @@ func toolDefinitions() []toolDefinition {
 			Name:        "create_video",
 			Description: "Submit an asynchronous Pig AI video generation operation; reuse idempotency_key on retries.",
 			InputSchema: objectSchema(map[string]any{
-				"prompt":               map[string]any{"type": "string", "minLength": minPromptRunes, "maxLength": maxPromptRunes},
+				"prompt":               map[string]any{"type": "string", "maxLength": maxPromptRunes, "description": "Omit or leave empty for workflow=multiframe2video; use transitions[].prompt. Required with 2-10000 characters for every other workflow."},
 				"idempotency_key":      map[string]any{"type": "string", "minLength": 8, "maxLength": 128},
 				"provider_id":          map[string]any{"type": "string"},
 				"model":                map[string]any{"type": "string"},
@@ -149,7 +149,7 @@ func toolDefinitions() []toolDefinition {
 					"description": "Preset voice order maps to AUDIO_0, AUDIO_1, and AUDIO_2.",
 					"items":       map[string]any{"type": "object", "additionalProperties": false, "required": []string{"voice_id"}, "properties": map[string]any{"voice_id": map[string]any{"type": "string", "minLength": 1, "maxLength": 64}}},
 				},
-			}, []string{"prompt", "idempotency_key"}),
+			}, []string{"idempotency_key"}),
 		},
 		{
 			Name:        "get_operation",

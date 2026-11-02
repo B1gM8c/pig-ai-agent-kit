@@ -128,7 +128,14 @@ func parseVideoInput(args map[string]json.RawMessage) (VideoInput, error) {
 	if err := rejectUnknownArgs(args, "prompt", "idempotency_key", "provider_id", "model", "aspect_ratio", "resolution", "duration", "first_frame", "last_frame", "reference_images", "keyframes", "reference_audios", "quote_id", "workflow", "transitions", "reference_video_urls", "reference_audio_urls"); err != nil {
 		return VideoInput{}, err
 	}
-	prompt, err := requiredString(args, "prompt")
+	workflow, err := optionalString(args, "workflow")
+	if err != nil {
+		return VideoInput{}, err
+	}
+	prompt, err := optionalString(args, "prompt")
+	if workflow != "multiframe2video" {
+		prompt, err = requiredString(args, "prompt")
+	}
 	if err != nil {
 		return VideoInput{}, err
 	}
