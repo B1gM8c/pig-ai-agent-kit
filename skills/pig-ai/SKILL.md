@@ -29,7 +29,9 @@ the user to configure `pig-ai-mcp` and `PIGAI_API_KEY`.
 1. Call `list_models` when the model, capability, valid controls, or defaults
    are unknown. Use only values returned by the current capability response.
 2. Call `preview_billing` when the user asks about cost or when showing the
-   expected point charge before generation is useful. Always provide its
+   expected point charge before generation is useful. For retail-enabled
+   Dreamina/Seedance, preview is required: retain the returned `quote_id` and
+   send it with the identical specification when creating. Always provide its
    required `mode` and `n`. Treat it as an estimate; the terminal server ledger
    is authoritative.
 3. For each logical generation, create one stable 8–128 character
@@ -60,6 +62,28 @@ the user to configure `pig-ai-mcp` and `PIGAI_API_KEY`.
    state. Segment output is bbox/region metadata, not a pixel mask, PSD, or
    editable-layer equivalent.
 
+## Dreamina / Seedance media and progress
+
+Use the exact enabled identity and `workflow` returned by `list_models`.
+Image creation supports `resolution`, `width`, and `height`; video creation
+supports `aspect_ratio`, `resolution`, `duration`, and `transitions` but has no
+`mode` field. Billing preview still uses `mode` to select the quote family.
+Reference images use the ordered manifest. Dreamina reference videos and
+uploaded audio use `reference_video_urls` and `reference_audio_urls` (HTTPS
+URLs of uploaded media); `reference_audios: [{voice_id}]` is the distinct preset
+voice contract. Preserve ordering and never silently discard unsupported media.
+The MCP adapter does not implement direct audio/video file upload.
+
+Return `provider_progress`, legacy `progress`/`progress_text`, and structured
+`error` from the operation
+without inventing values. A service progress value can be a stage or estimate;
+it is not a promise of the provider's rendering percentage. Missing progress
+means indeterminate, not zero or completion. Prefer `provider_progress` when
+available: label `progress_source: estimated` as estimated, preserve
+`observed_at_ms`, and display queue/ETA fields only when supplied. Legacy
+`progress` must not be labeled as an upstream percentage. `generation_uncertain` / `50131`
+means query the original operation, not start another paid generation.
+
 ## Errors and recovery
 
 Treat tool errors as structured `code`, `message`, `http_status`,
@@ -68,9 +92,14 @@ retryable statuses, always with the original idempotency key. Authentication,
 scope, validation, insufficient-points, and idempotency-conflict errors require
 configuration or user action.
 
+`409 quote_stale` requires a fresh preview and price confirmation before a new
+accepted operation exists; never replace an accepted operation to refresh its
+quote. A specification without a configured price is unavailable, not free.
+
 A timeout does not prove that submission failed. Continue with a previously
 returned operation ID; otherwise retry the same logical submission with the
-same idempotency key. Never infer a charge or refund from an HTTP status alone.
+same idempotency key. Stop a bounded local wait without canceling the operation;
+retain its ID for later reads, including after 24 hours. Never infer a charge or refund from an HTTP status alone.
 
 Read [references/api.md](references/api.md) when exact tool arguments, public
 endpoint mappings, media-reference rules, scopes, or output semantics are

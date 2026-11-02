@@ -29,6 +29,9 @@ const (
 	maxPromptRunes          = 10000
 	maxReferenceURLBytes    = 4096
 	maxImageReferences      = 4
+	maxVideoReferences      = 7
+	maxVideoVoices          = 3
+	maxVideoReferenceSlot   = 6
 	maxReferenceSlot        = 3
 	maxResourceIDLength     = 64
 )
@@ -124,6 +127,11 @@ type ReferenceInput struct {
 }
 
 type ImageInput struct {
+	QuoteID        string           `json:"quote_id,omitempty"`
+	Workflow       string           `json:"workflow,omitempty"`
+	Resolution     string           `json:"resolution,omitempty"`
+	Width          int              `json:"width,omitempty"`
+	Height         int              `json:"height,omitempty"`
 	ProviderID     string           `json:"provider_id,omitempty"`
 	Model          string           `json:"model,omitempty"`
 	Mode           string           `json:"mode,omitempty"`
@@ -138,14 +146,37 @@ type ImageInput struct {
 }
 
 type VideoInput struct {
-	ProviderID     string          `json:"provider_id,omitempty"`
-	Model          string          `json:"model,omitempty"`
-	Prompt         string          `json:"prompt"`
-	AspectRatio    string          `json:"aspect_ratio,omitempty"`
-	Resolution     string          `json:"resolution,omitempty"`
-	Duration       int             `json:"duration,omitempty"`
-	FirstFrame     *ReferenceInput `json:"first_frame,omitempty"`
-	IdempotencyKey string          `json:"-"`
+	QuoteID            string                 `json:"quote_id,omitempty"`
+	Workflow           string                 `json:"workflow,omitempty"`
+	ReferenceVideoURLs []string               `json:"reference_video_urls,omitempty"`
+	ReferenceAudioURLs []string               `json:"reference_audio_urls,omitempty"`
+	Transitions        []VideoTransitionInput `json:"transitions,omitempty"`
+	ProviderID         string                 `json:"provider_id,omitempty"`
+	Model              string                 `json:"model,omitempty"`
+	Prompt             string                 `json:"prompt"`
+	AspectRatio        string                 `json:"aspect_ratio,omitempty"`
+	Resolution         string                 `json:"resolution,omitempty"`
+	Duration           int                    `json:"duration,omitempty"`
+	FirstFrame         *ReferenceInput        `json:"first_frame,omitempty"`
+	LastFrame          *ReferenceInput        `json:"last_frame,omitempty"`
+	ReferenceImages    []ReferenceInput       `json:"reference_images,omitempty"`
+	Keyframes          []VideoKeyframeInput   `json:"keyframes,omitempty"`
+	ReferenceAudios    []AudioReferenceInput  `json:"reference_audios,omitempty"`
+	IdempotencyKey     string                 `json:"-"`
+}
+
+type VideoTransitionInput struct {
+	Prompt   string  `json:"prompt"`
+	Duration float64 `json:"duration"`
+}
+
+type VideoKeyframeInput struct {
+	Image      ReferenceInput `json:"image"`
+	TimestampS float64        `json:"timestamp_s"`
+}
+
+type AudioReferenceInput struct {
+	VoiceID string `json:"voice_id"`
 }
 
 // UnmarshalJSON records whether slot was present so callers can distinguish an

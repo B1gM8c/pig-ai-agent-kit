@@ -94,7 +94,7 @@ func TestMCPStdioLifecycleAndToolDispatch(t *testing.T) {
 		if tool.Name == "create_image" {
 			rawBytes, _ := json.Marshal(tool.InputSchema)
 			raw := string(rawBytes)
-			if strings.Contains(raw, "aspect_ratio") || strings.Contains(raw, "resolution") {
+			if strings.Contains(raw, "aspect_ratio") {
 				t.Fatalf("image schema advertises unsupported fields: %s", raw)
 			}
 		}
@@ -161,8 +161,12 @@ func TestMCPToolSchemasMatchBackendBounds(t *testing.T) {
 			if !ok {
 				t.Fatalf("%s schema is missing prompt", definition.Name)
 			}
-			if got := int(prompt["minLength"].(float64)); got != minPromptRunes {
-				t.Errorf("%s prompt minLength = %d, want %d", definition.Name, got, minPromptRunes)
+			if definition.Name == "create_image" {
+				if got := int(prompt["minLength"].(float64)); got != minPromptRunes {
+					t.Errorf("%s prompt minLength = %d, want %d", definition.Name, got, minPromptRunes)
+				}
+			} else if _, exists := prompt["minLength"]; exists {
+				t.Error("create_video prompt minimum must depend on workflow")
 			}
 			if got := int(prompt["maxLength"].(float64)); got != maxPromptRunes {
 				t.Errorf("%s prompt maxLength = %d, want %d", definition.Name, got, maxPromptRunes)

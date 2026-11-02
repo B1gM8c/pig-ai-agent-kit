@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"mime"
 	"net/url"
 	"strings"
@@ -43,7 +44,11 @@ func validatePrompt(prompt string) error {
 }
 
 func validateReference(reference ReferenceInput, field string) error {
-	if err := normalizeReference(&reference, 0, ""); err != nil {
+	return validateReferenceWithMaxSlot(reference, field, maxReferenceSlot)
+}
+
+func validateReferenceWithMaxSlot(reference ReferenceInput, field string, maxSlot int) error {
+	if err := normalizeReferenceWithMaxSlot(&reference, 0, "", maxSlot); err != nil {
 		return &ValidationError{Field: field, Reason: err.Error()}
 	}
 	hasURL := strings.TrimSpace(reference.URL) != ""
@@ -87,6 +92,9 @@ func validateReference(reference ReferenceInput, field string) error {
 }
 
 func validateImageInput(input ImageInput) error {
+	if input.Width < 0 || input.Height < 0 {
+		return &ValidationError{Field: "width/height", Reason: "must not be negative"}
+	}
 	if err := validateIdempotencyKey(input.IdempotencyKey); err != nil {
 		return err
 	}
@@ -133,14 +141,31 @@ func validateImageInput(input ImageInput) error {
 }
 
 func validateVideoInput(input VideoInput) error {
+	if err := validateTransitions(input.Transitions); err != nil {
+		return err
+	}
+	for field, urls := range map[string][]string{"reference_video_urls": input.ReferenceVideoURLs, "reference_audio_urls": input.ReferenceAudioURLs} {
+		if len(urls) > 10 {
+			return &ValidationError{Field: field, Reason: "must contain at most 10 URLs"}
+		}
+		for i, raw := range urls {
+			if err := validateReference(ReferenceInput{SourceType: "url", URL: raw}, fmt.Sprintf("%s[%d]", field, i)); err != nil {
+				return err
+			}
+		}
+	}
 	if err := validateIdempotencyKey(input.IdempotencyKey); err != nil {
 		return err
 	}
-	if err := validatePrompt(input.Prompt); err != nil {
+	if input.Workflow == "multiframe2video" {
+		if strings.TrimSpace(input.Prompt) != "" {
+			return &ValidationError{Field: "prompt", Reason: "must be empty for multiframe2video; use transitions[].prompt"}
+		}
+	} else if err := validatePrompt(input.Prompt); err != nil {
 		return err
 	}
-	if input.Duration < 0 {
-		return &ValidationError{Field: "duration", Reason: "must be non-negative when provided"}
+	if input.Duration < 0 || input.Duration > 3600 {
+		return &ValidationError{Field: "duration", Reason: "must be between 0 and 3600 seconds when provided"}
 	}
 	if input.FirstFrame != nil {
 		if err := normalizeReference(input.FirstFrame, 0, "first_frame"); err != nil {
@@ -150,6 +175,70 @@ func validateVideoInput(input VideoInput) error {
 			return err
 		}
 	}
+	if input.LastFrame != nil {
+		if err := normalizeReference(input.LastFrame, 0, "last_frame"); err != nil {
+			return &ValidationError{Field: "last_frame", Reason: err.Error()}
+		}
+		if err := validateReference(*input.LastFrame, "last_frame"); err != nil {
+			return err
+		}
+	}
+	if len(input.ReferenceImages) > maxVideoReferences {
+		return &ValidationError{Field: "reference_images", Reason: fmt.Sprintf("must contain at most %d items", maxVideoReferences)}
+	}
+	seenSlots := make(map[int]struct{}, len(input.ReferenceImages))
+	for index := range input.ReferenceImages {
+		if err := normalizeReferenceWithMaxSlot(&input.ReferenceImages[index], index, "reference", maxVideoReferenceSlot); err != nil {
+			return &ValidationError{Field: fmt.Sprintf("reference_images[%d]", index), Reason: err.Error()}
+		}
+		if _, exists := seenSlots[input.ReferenceImages[index].Slot]; exists {
+			return &ValidationError{Field: fmt.Sprintf("reference_images[%d].slot", index), Reason: "slot must be unique"}
+		}
+		seenSlots[input.ReferenceImages[index].Slot] = struct{}{}
+		if err := validateReferenceWithMaxSlot(input.ReferenceImages[index], fmt.Sprintf("reference_images[%d]", index), maxVideoReferenceSlot); err != nil {
+			return err
+		}
+	}
+	if len(input.Keyframes) > 4 {
+		return &ValidationError{Field: "keyframes", Reason: "must contain at most 4 items"}
+	}
+	previousTick := int64(0)
+	for index := range input.Keyframes {
+		if err := normalizeReferenceWithMaxSlot(&input.Keyframes[index].Image, index, "keyframe", 3); err != nil {
+			return &ValidationError{Field: fmt.Sprintf("keyframes[%d].image", index), Reason: err.Error()}
+		}
+		if err := validateReferenceWithMaxSlot(input.Keyframes[index].Image, fmt.Sprintf("keyframes[%d].image", index), 3); err != nil {
+			return err
+		}
+		timestamp := input.Keyframes[index].TimestampS
+		scaled := timestamp * 3
+		tick := math.Round(scaled)
+		if math.IsNaN(timestamp) || math.IsInf(timestamp, 0) || math.Abs(scaled-tick) > 1e-9 || tick < 1 || int64(tick) <= previousTick || input.Duration > 0 && tick >= float64(input.Duration*3) {
+			return &ValidationError{Field: fmt.Sprintf("keyframes[%d].timestamp_s", index), Reason: "must be strictly increasing, inside duration, and on the 1/3-second grid"}
+		}
+		previousTick = int64(tick)
+		input.Keyframes[index].TimestampS = tick / 3
+	}
+	imageInputCount := len(input.ReferenceImages) + len(input.Keyframes)
+	if input.FirstFrame != nil {
+		imageInputCount++
+	}
+	if input.LastFrame != nil {
+		imageInputCount++
+	}
+	if imageInputCount > 9 {
+		return &ValidationError{Field: "keyframes", Reason: "first_frame, last_frame, reference_images, and keyframes may contain at most 9 image inputs in total"}
+	}
+	if len(input.ReferenceAudios) > maxVideoVoices {
+		return &ValidationError{Field: "reference_audios", Reason: fmt.Sprintf("must contain at most %d items", maxVideoVoices)}
+	}
+	for index := range input.ReferenceAudios {
+		voiceID := strings.TrimSpace(input.ReferenceAudios[index].VoiceID)
+		if voiceID == "" || len(voiceID) > 64 || strings.IndexFunc(voiceID, func(r rune) bool { return r < 0x20 || r == 0x7f }) >= 0 {
+			return &ValidationError{Field: fmt.Sprintf("reference_audios[%d].voice_id", index), Reason: "must be a valid preset voice identifier"}
+		}
+		input.ReferenceAudios[index].VoiceID = voiceID
+	}
 	return nil
 }
 
@@ -158,6 +247,10 @@ func validateVideoInput(input VideoInput) error {
 // slot are included in the request digest by the API and therefore must be
 // deterministic across retries.
 func normalizeReference(reference *ReferenceInput, index int, defaultRole string) error {
+	return normalizeReferenceWithMaxSlot(reference, index, defaultRole, maxReferenceSlot)
+}
+
+func normalizeReferenceWithMaxSlot(reference *ReferenceInput, index int, defaultRole string, maxSlot int) error {
 	if reference == nil {
 		return fmt.Errorf("reference must not be null")
 	}
@@ -188,8 +281,8 @@ func normalizeReference(reference *ReferenceInput, index int, defaultRole string
 	if len(reference.Role) > 80 || strings.ContainsAny(reference.Role, "\r\n\x00") {
 		return fmt.Errorf("role is invalid")
 	}
-	if reference.Slot < 0 || reference.Slot > maxReferenceSlot {
-		return fmt.Errorf("slot must be between 0 and %d", maxReferenceSlot)
+	if reference.Slot < 0 || reference.Slot > maxSlot {
+		return fmt.Errorf("slot must be between 0 and %d", maxSlot)
 	}
 	if reference.Slot == 0 && !reference.slotSet && index > 0 {
 		reference.Slot = index
@@ -292,4 +385,21 @@ func optionalReferences(args map[string]json.RawMessage, key string) ([]Referenc
 		return nil, &ValidationError{Field: key, Reason: "must be an array of objects"}
 	}
 	return references, nil
+}
+
+func validateTransitions(transitions []VideoTransitionInput) error {
+	if len(transitions) > 19 {
+		return &ValidationError{Field: "transitions", Reason: "must contain at most 19 items"}
+	}
+	for i, transition := range transitions {
+		if math.IsNaN(transition.Duration) || math.IsInf(transition.Duration, 0) || transition.Duration <= 0 {
+			return &ValidationError{Field: fmt.Sprintf("transitions[%d].duration", i), Reason: "must be positive"}
+		}
+	}
+	return nil
+}
+
+func optionalInt(args map[string]json.RawMessage, key string) (int, error) {
+	value, _, err := optionalIntPresence(args, key)
+	return value, err
 }
