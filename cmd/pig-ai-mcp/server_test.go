@@ -94,7 +94,7 @@ func TestMCPStdioLifecycleAndToolDispatch(t *testing.T) {
 		if tool.Name == "create_image" {
 			rawBytes, _ := json.Marshal(tool.InputSchema)
 			raw := string(rawBytes)
-			if strings.Contains(raw, "aspect_ratio") || strings.Contains(raw, "resolution") {
+			if strings.Contains(raw, "aspect_ratio") {
 				t.Fatalf("image schema advertises unsupported fields: %s", raw)
 			}
 		}

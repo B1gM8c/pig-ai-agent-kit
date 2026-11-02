@@ -60,10 +60,16 @@ Input fields:
 | --- | --- | --- | --- |
 | `provider_id` | string | no | Enabled provider from `list_models`. |
 | `model` | string | no | Enabled model from `list_models`. |
-| `mode` | string | yes | `text_to_image`, `image_to_image`, `text_to_video`, or `image_to_video`. |
+| `mode` | string | yes | `text_to_image`, `image_to_image`, `text_to_video`, `image_to_video`, or `reference_to_video`. |
 | `size` | string | no | Image size supported by the selected model. |
 | `quality` | string | no | Image quality supported by the selected model. |
 | `n` | integer | yes | `1`–`4`; video modes require `1`. |
+| `workflow` | string | no | Exact enabled workflow from the current capability response. |
+| `resolution`, `aspect_ratio` | string | no | Exact generation specification. |
+| `width`, `height`, `duration` | integer | no | Non-negative explicit dimensions or video duration. |
+| `reference_image_count` | integer | no | Accurate image count, at most 30; model/create limits may be narrower. |
+| `reference_video_count`, `reference_audio_count` | integer | no | Accurate count, at most 10 each. |
+| `transitions` | array | no | At most 19 `{prompt, duration}` objects; duration is a positive number of seconds. |
 
 Example:
 
@@ -79,7 +85,11 @@ Example:
 Output may include `points_cost`, `charge_points`, `free_usage_cost`,
 `free_available`, `free_used`, `free_remaining`, `daily_free_limit`,
 `points_balance`, and `vip_level`. It is advisory; a later terminal operation
-contains the authoritative settlement projection.
+contains the authoritative settlement projection. Retail-enabled Dreamina/Seedance
+models require the returned `quote_id` with the same model/provider/workflow,
+resolution/duration/aspect ratio, transitions and reference counts when creating.
+An unpriced specification is unavailable, not free. `409 quote_stale` requires a
+fresh preview and price confirmation, without replacing an accepted operation.
 
 ## Shared media reference
 
@@ -91,7 +101,7 @@ contains the authoritative settlement projection.
 | `source_type` | string | `url` or `file`; may be omitted when the source makes it unambiguous. |
 | `url` | string | Absolute HTTPS URL; the local MCP client defensively limits it to 4,096 characters. HTTP is accepted only for loopback test fixtures, not production references. |
 | `content_base64` | string | Standard base64 file content for `source_type: file`. |
-| `slot` | integer | Optional stable zero-based slot `0`–`3`. Keep it unchanged across retries. |
+| `slot` | integer | Optional stable zero-based slot `0`–`3` for image creation, `0`–`6` for video `reference_images`. Keep it unchanged across retries. |
 | `name` | string | Optional local filename metadata for inline content. |
 | `content_type` | string | Optional valid MIME type used to choose a default filename extension for inline content; the server identifies the uploaded bytes independently. |
 
@@ -121,6 +131,9 @@ Submit one asynchronous image operation.
 | `n` | integer | yes | `1`–`4`, within the model limit. |
 | `references` | array | no | Ordered media references. |
 | `mask` | object | no | One media reference used as a mask. |
+| `quote_id` | string | model-dependent | Quote returned by `preview_billing`. |
+| `workflow`, `resolution` | string | no | Enabled Dreamina workflow and exact quoted resolution. |
+| `width`, `height` | integer | no | Non-negative custom image dimensions supported by the model. |
 
 `text_to_image` must not include `references` or `mask`.
 `image_to_image` requires at least one item in `references`; a mask alone does
@@ -171,7 +184,13 @@ Submit one asynchronous video operation.
 | `aspect_ratio` | string | no | Value supported by the selected model. |
 | `resolution` | string | no | Value supported by the selected model. |
 | `duration` | integer | no | `0` or omitted selects the model default; otherwise use a positive integer supported by the selected model in `list_models`. |
-| `first_frame` | object | no | One media reference if the model supports it. |
+| `first_frame`, `last_frame` | object | no | Ordered first/last image manifests if supported. |
+| `quote_id`, `workflow` | string | model-dependent | Exact quote and enabled workflow. |
+| `reference_images` | array | no | Up to seven ordered image manifests, slots 0–6. |
+| `keyframes` | array | no | Up to four `{image, timestamp_s}` objects; times strictly increasing, within duration, on a one-third-second grid. |
+| `reference_audios` | array | no | Up to three preset `{voice_id}` objects; order maps to AUDIO_0…AUDIO_2. |
+| `reference_video_urls`, `reference_audio_urls` | array | no | Ordered HTTPS URLs of uploaded media, at most 10 each; distinct from preset voices. |
+| `transitions` | array | no | At most 19 `{prompt, duration}` objects with a positive duration. |
 
 Example:
 
@@ -186,7 +205,11 @@ Example:
 ```
 
 Video has no `mode`, `n`, `references`, `mask`, `size`, or `quality` fields.
-Use `first_frame` as the sole optional media input.
+Use only media forms supported by the selected model/workflow. First/last frames,
+reference images and keyframes together are limited to nine image inputs. Inline
+image content becomes multipart parts; audio/video inputs use HTTPS URLs already
+uploaded through the application. This MCP adapter has no direct audio/video
+binary upload tool. Do not silently discard unsupported references.
 
 ### Creation output and idempotency
 
@@ -235,7 +258,20 @@ dot, colon, or hyphen in any position. Output contains
 - `requested`, `completed`, `charge_points`, `refund_points`, and
   `net_points`;
 - accepted, queue, and generation latency fields when available;
-- zero or more result objects with stable result IDs and media metadata.
+- zero or more result objects with stable result IDs and media metadata;
+- optional `provider_progress` with `provider_status`, `queue_position`,
+  `queue_total`, `estimated_remaining_seconds`, `observed_at_ms`, `stage`, and
+  optional `progress_percent`/`progress_source` (`provider` or `estimated`);
+- optional structured `error: {code,message}` and compatibility fields
+  `progress`/`progress_text`.
+
+The client preserves server values. Label estimated percentages as estimates;
+retain observation timestamps and mark stale values. Queue counts are tasks, not
+people. Missing percentage is indeterminate, not 0% or 100%; legacy `progress`
+must not be labeled as an upstream rendering percentage. An uncertain operation
+is not a failed submission: query the original ID rather than generating again.
+Stop a bounded local wait without canceling the job, and resume it later rather
+than imposing a 24-hour tracking cutoff.
 
 Poll with bounded backoff until `status` is `succeeded` or `failed` and
 `settlement_status` is `settled`, `refunded`, or `not_charged`.

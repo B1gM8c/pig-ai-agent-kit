@@ -435,7 +435,7 @@ func (c *Client) CreateVideo(ctx context.Context, input VideoInput) (json.RawMes
 	if err != nil {
 		return nil, err
 	}
-	if hasInlineReferencePtr(input.FirstFrame) {
+	if hasInlineReferencePtr(input.FirstFrame) || hasInlineReferencePtr(input.LastFrame) || hasInlineReference(input.ReferenceImages) || hasInlineVideoKeyframe(input.Keyframes) {
 		fields, files, err := videoMultipart(input)
 		if err != nil {
 			return nil, err
@@ -501,7 +501,7 @@ func videoMultipart(input VideoInput) (map[string]string, []multipartFile, error
 	if err != nil {
 		return nil, nil, fmt.Errorf("encode video request: %w", err)
 	}
-	files := make([]multipartFile, 0, 1)
+	files := make([]multipartFile, 0, 2+len(input.ReferenceImages)+len(input.Keyframes))
 	if input.FirstFrame != nil {
 		if input.FirstFrame.SourceType == "file" {
 			data, decodeErr := decodeReferenceWithLimit(*input.FirstFrame, maxInlineReferenceBytes)
@@ -510,6 +510,33 @@ func videoMultipart(input VideoInput) (map[string]string, []multipartFile, error
 			}
 			files = append(files, multipartFile{Field: "first_frame", Name: input.FirstFrame.NameOrDefault(0), Data: data})
 		}
+	}
+	if input.LastFrame != nil && input.LastFrame.SourceType == "file" {
+		data, decodeErr := decodeReferenceWithLimit(*input.LastFrame, maxInlineReferenceBytes)
+		if decodeErr != nil {
+			return nil, nil, decodeErr
+		}
+		files = append(files, multipartFile{Field: "last_frame", Name: input.LastFrame.NameOrDefault(0), Data: data})
+	}
+	for _, reference := range input.ReferenceImages {
+		if reference.SourceType != "file" {
+			continue
+		}
+		data, decodeErr := decodeReferenceWithLimit(reference, maxInlineReferenceBytes)
+		if decodeErr != nil {
+			return nil, nil, decodeErr
+		}
+		files = append(files, multipartFile{Field: fmt.Sprintf("reference_%d", reference.Slot), Name: reference.NameOrDefault(reference.Slot), Data: data})
+	}
+	for index, keyframe := range input.Keyframes {
+		if keyframe.Image.SourceType != "file" {
+			continue
+		}
+		data, decodeErr := decodeReferenceWithLimit(keyframe.Image, maxInlineReferenceBytes)
+		if decodeErr != nil {
+			return nil, nil, decodeErr
+		}
+		files = append(files, multipartFile{Field: fmt.Sprintf("keyframe_%d", index), Name: keyframe.Image.NameOrDefault(index), Data: data})
 	}
 	return map[string]string{"request": string(request)}, files, nil
 }
@@ -533,6 +560,11 @@ func manifestReference(reference ReferenceInput) referenceManifest {
 
 func imageRequestPayload(input ImageInput) map[string]any {
 	payload := map[string]any{
+		"quote_id":    input.QuoteID,
+		"workflow":    input.Workflow,
+		"resolution":  input.Resolution,
+		"width":       input.Width,
+		"height":      input.Height,
 		"provider_id": input.ProviderID,
 		"model":       input.Model,
 		"mode":        input.Mode,
@@ -556,6 +588,8 @@ func imageRequestPayload(input ImageInput) map[string]any {
 
 func videoRequestPayload(input VideoInput) map[string]any {
 	payload := map[string]any{
+		"quote_id":     input.QuoteID,
+		"workflow":     input.Workflow,
 		"provider_id":  input.ProviderID,
 		"model":        input.Model,
 		"prompt":       input.Prompt,
@@ -563,8 +597,37 @@ func videoRequestPayload(input VideoInput) map[string]any {
 		"resolution":   input.Resolution,
 		"duration":     input.Duration,
 	}
+	if len(input.ReferenceVideoURLs) > 0 {
+		payload["reference_video_urls"] = input.ReferenceVideoURLs
+	}
+	if len(input.ReferenceAudioURLs) > 0 {
+		payload["reference_audio_urls"] = input.ReferenceAudioURLs
+	}
+	if len(input.Transitions) > 0 {
+		payload["transitions"] = input.Transitions
+	}
 	if input.FirstFrame != nil {
 		payload["first_frame"] = manifestReference(*input.FirstFrame)
+	}
+	if input.LastFrame != nil {
+		payload["last_frame"] = manifestReference(*input.LastFrame)
+	}
+	if len(input.ReferenceImages) > 0 {
+		references := make([]referenceManifest, 0, len(input.ReferenceImages))
+		for _, reference := range input.ReferenceImages {
+			references = append(references, manifestReference(reference))
+		}
+		payload["reference_images"] = references
+	}
+	if len(input.Keyframes) > 0 {
+		keyframes := make([]map[string]any, 0, len(input.Keyframes))
+		for _, keyframe := range input.Keyframes {
+			keyframes = append(keyframes, map[string]any{"image": manifestReference(keyframe.Image), "timestamp_s": keyframe.TimestampS})
+		}
+		payload["keyframes"] = keyframes
+	}
+	if len(input.ReferenceAudios) > 0 {
+		payload["reference_audios"] = input.ReferenceAudios
 	}
 	return payload
 }
@@ -908,4 +971,13 @@ func redactError(err error, secret string) error {
 
 func redactBytes(raw []byte, secret string) []byte {
 	return []byte(redactString(string(raw), secret))
+}
+
+func hasInlineVideoKeyframe(keyframes []VideoKeyframeInput) bool {
+	for _, keyframe := range keyframes {
+		if strings.TrimSpace(keyframe.Image.ContentBase64) != "" {
+			return true
+		}
+	}
+	return false
 }

@@ -177,6 +177,17 @@ Use $pig-ai to call list_models. Do not create any image or video.
 
 详细参数和返回语义见 [Skill API 契约](skills/pig-ai/references/api.md)。公开 REST 文档可在 [Pig AI 开发者文档](https://www.pigsec.cn/ai/developer/docs) 查看。
 
+## Dreamina / Seedance（当前源码）
+
+当前源码补齐即梦图片和 Seedance 视频的报价与素材参数。现有下载链接仍指向
+`v0.1.0-beta.2`，不代表该预发布包已包含这些新增功能；使用新增能力需构建相应源码，
+并以服务端 `list_models` 返回的已启用能力为准。
+
+- 先查询模型，再用 `preview_billing` 获取 `quote_id`，以相同规格和稳定幂等键提交。
+- 支持工作流、分辨率、自定义图片尺寸、首尾帧、关键帧、参考图、转场，以及已上传音视频的 HTTPS 地址。素材能力和数量以具体模型为准；MCP 不提供音视频二进制上传工具。
+- `get_operation` 原样返回进度来源、观测时间、排队位置、预计剩余时间和结构化错误。预计百分比标为预计，无数字时保持不确定；不会把兼容字段当作真实上游进度。
+- `quote_stale` 重新确认报价；`generation_uncertain` 保留原任务继续查询，不重建订单。停止本地等待不等于取消任务，也不会因 24 小时过去而主动重提。
+
 ## 安全与隐私
 
 - MCP 只把请求发送到配置的 Pig AI API，不包含模型供应商密钥。

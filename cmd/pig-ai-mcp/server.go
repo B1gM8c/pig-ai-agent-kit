@@ -78,14 +78,24 @@ func toolDefinitions() []toolDefinition {
 		},
 		{
 			Name:        "preview_billing",
-			Description: "Preview the server-side point charge and free allowance for one Pig AI request.",
+			Description: "Preview the server-side point charge and free allowance. For Dreamina retail models, pass the returned quote_id with the identical specification to create_image/create_video.",
 			InputSchema: objectSchema(map[string]any{
-				"provider_id": map[string]any{"type": "string"},
-				"model":       map[string]any{"type": "string"},
-				"mode":        map[string]any{"type": "string", "enum": []string{"text_to_image", "image_to_image", "text_to_video", "image_to_video"}},
-				"size":        map[string]any{"type": "string"},
-				"quality":     map[string]any{"type": "string"},
-				"n":           map[string]any{"type": "integer", "minimum": 1, "maximum": 4, "description": "Must be 1 for video modes."},
+				"provider_id":           map[string]any{"type": "string"},
+				"model":                 map[string]any{"type": "string"},
+				"mode":                  map[string]any{"type": "string", "enum": []string{"text_to_image", "image_to_image", "text_to_video", "image_to_video", "reference_to_video"}},
+				"size":                  map[string]any{"type": "string"},
+				"quality":               map[string]any{"type": "string"},
+				"workflow":              map[string]any{"type": "string"},
+				"resolution":            map[string]any{"type": "string"},
+				"aspect_ratio":          map[string]any{"type": "string"},
+				"width":                 map[string]any{"type": "integer", "minimum": 0},
+				"height":                map[string]any{"type": "integer", "minimum": 0},
+				"duration":              map[string]any{"type": "integer", "minimum": 0},
+				"reference_image_count": map[string]any{"type": "integer", "minimum": 0, "maximum": 30},
+				"reference_video_count": map[string]any{"type": "integer", "minimum": 0, "maximum": 10},
+				"reference_audio_count": map[string]any{"type": "integer", "minimum": 0, "maximum": 10},
+				"transitions":           transitionsSchema(),
+				"n":                     map[string]any{"type": "integer", "minimum": 1, "maximum": 4},
 			}, []string{"mode", "n"}),
 		},
 		{
@@ -99,6 +109,11 @@ func toolDefinitions() []toolDefinition {
 				"mode":            map[string]any{"type": "string", "enum": []string{"text_to_image", "image_to_image"}},
 				"size":            map[string]any{"type": "string"},
 				"quality":         map[string]any{"type": "string"},
+				"quote_id":        map[string]any{"type": "string", "maxLength": 64},
+				"workflow":        map[string]any{"type": "string"},
+				"resolution":      map[string]any{"type": "string"},
+				"width":           map[string]any{"type": "integer", "minimum": 0},
+				"height":          map[string]any{"type": "integer", "minimum": 0},
 				"n":               map[string]any{"type": "integer", "minimum": 1, "maximum": 4},
 				"references":      referencesSchema(),
 				"mask":            referenceSchema(),
@@ -108,14 +123,32 @@ func toolDefinitions() []toolDefinition {
 			Name:        "create_video",
 			Description: "Submit an asynchronous Pig AI video generation operation; reuse idempotency_key on retries.",
 			InputSchema: objectSchema(map[string]any{
-				"prompt":          map[string]any{"type": "string", "minLength": minPromptRunes, "maxLength": maxPromptRunes},
-				"idempotency_key": map[string]any{"type": "string", "minLength": 8, "maxLength": 128},
-				"provider_id":     map[string]any{"type": "string"},
-				"model":           map[string]any{"type": "string"},
-				"aspect_ratio":    map[string]any{"type": "string"},
-				"resolution":      map[string]any{"type": "string"},
-				"duration":        map[string]any{"type": "integer", "minimum": 0},
-				"first_frame":     referenceSchema(),
+				"prompt":               map[string]any{"type": "string", "minLength": minPromptRunes, "maxLength": maxPromptRunes},
+				"idempotency_key":      map[string]any{"type": "string", "minLength": 8, "maxLength": 128},
+				"provider_id":          map[string]any{"type": "string"},
+				"model":                map[string]any{"type": "string"},
+				"aspect_ratio":         map[string]any{"type": "string"},
+				"resolution":           map[string]any{"type": "string"},
+				"quote_id":             map[string]any{"type": "string", "maxLength": 64},
+				"workflow":             map[string]any{"type": "string"},
+				"transitions":          transitionsSchema(),
+				"reference_video_urls": map[string]any{"type": "array", "maxItems": 10, "items": map[string]any{"type": "string", "format": "uri"}},
+				"reference_audio_urls": map[string]any{"type": "array", "maxItems": 10, "items": map[string]any{"type": "string", "format": "uri"}},
+				"duration":             map[string]any{"type": "integer", "minimum": 0, "maximum": 3600},
+				"first_frame":          referenceSchema(),
+				"last_frame":           referenceSchema(),
+				"reference_images":     map[string]any{"type": "array", "maxItems": maxVideoReferences, "items": referenceSchemaWithMaxSlot(maxVideoReferenceSlot)},
+				"keyframes": map[string]any{
+					"type": "array", "maxItems": 4,
+					"items": map[string]any{"type": "object", "additionalProperties": false, "required": []string{"image", "timestamp_s"}, "properties": map[string]any{
+						"image": referenceSchemaWithMaxSlot(3), "timestamp_s": map[string]any{"type": "number", "exclusiveMinimum": 0},
+					}},
+				},
+				"reference_audios": map[string]any{
+					"type": "array", "maxItems": maxVideoVoices,
+					"description": "Preset voice order maps to AUDIO_0, AUDIO_1, and AUDIO_2.",
+					"items":       map[string]any{"type": "object", "additionalProperties": false, "required": []string{"voice_id"}, "properties": map[string]any{"voice_id": map[string]any{"type": "string", "minLength": 1, "maxLength": 64}}},
+				},
 			}, []string{"prompt", "idempotency_key"}),
 		},
 		{
@@ -159,14 +192,16 @@ func objectSchema(properties map[string]any, required []string) json.RawMessage 
 	return raw
 }
 
-func referenceSchema() map[string]any {
+func referenceSchema() map[string]any { return referenceSchemaWithMaxSlot(maxReferenceSlot) }
+
+func referenceSchemaWithMaxSlot(maxSlot int) map[string]any {
 	return map[string]any{
 		"type": "object",
 		"properties": map[string]any{
 			"role":           map[string]any{"type": "string", "maxLength": 80},
 			"source_type":    map[string]any{"type": "string", "enum": []string{"url", "file"}},
 			"url":            map[string]any{"type": "string", "format": "uri", "maxLength": maxReferenceURLBytes},
-			"slot":           map[string]any{"type": "integer", "minimum": 0, "maximum": maxReferenceSlot},
+			"slot":           map[string]any{"type": "integer", "minimum": 0, "maximum": maxSlot},
 			"name":           map[string]any{"type": "string", "maxLength": 128},
 			"content_type":   map[string]any{"type": "string", "maxLength": 128},
 			"content_base64": map[string]any{"type": "string", "description": "Optional base64 file content; bounded by the MCP client."},
@@ -336,4 +371,11 @@ func asMCPError(err error, secret string) MCPError {
 		}
 	}
 	return MCPError{Code: "client_error", Message: redactString(err.Error(), secret)}
+}
+
+func transitionsSchema() map[string]any {
+	return map[string]any{"type": "array", "maxItems": 19, "items": map[string]any{
+		"type": "object", "additionalProperties": false, "required": []string{"prompt", "duration"},
+		"properties": map[string]any{"prompt": map[string]any{"type": "string"}, "duration": map[string]any{"type": "number", "exclusiveMinimum": 0}},
+	}}
 }

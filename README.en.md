@@ -177,6 +177,18 @@ A successful response lists current image and video capabilities. `list_models` 
 
 See the [Skill API contract](skills/pig-ai/references/api.md) for exact arguments and semantics. The public REST reference is available in the [Pig AI developer documentation](https://www.pigsec.cn/ai/developer/docs).
 
+## Dreamina / Seedance (current source)
+
+The current source adds quote and media parameters for Dreamina images and
+Seedance videos. Existing download links still point to `v0.1.0-beta.2`; they do
+not imply that this pre-release contains these additions. Build the relevant
+source for these features and discover enabled capabilities with `list_models`.
+
+- Discover the model, obtain `quote_id` with `preview_billing`, then submit the identical specification with a stable idempotency key.
+- Pass workflows, resolution, custom image dimensions, first/last frames, keyframes, reference images, transitions, and HTTPS URLs of uploaded audio/video. Actual support and limits are model-specific; this MCP adapter has no audio/video binary upload tool.
+- `get_operation` preserves progress source, observation time, queue position, ETA and structured errors. Label estimated percentages; missing numbers remain indeterminate. Legacy progress is not a real upstream rendering percentage.
+- On `quote_stale`, confirm a fresh quote. On `generation_uncertain`, preserve and query the original operation instead of creating a replacement. Ending a local wait does not cancel the job or justify resubmission after 24 hours.
+
 ## Security and privacy
 
 - The MCP client sends requests only to the configured Pig AI API and contains no model-provider credentials.
