@@ -12,7 +12,7 @@ The project follows [Semantic Versioning](https://semver.org/).
 
 - Dreamina and Seedance quote-to-create parameters, first/last frames, ordered
   keyframes, image references, audio/video reference URLs, and preset voices.
-- Conditional prompt validation for multiframe and multimodal video workflows.
+- Conditional prompt validation for multiframe video workflows.
 - Documented provider progress, queue/ETA, structured errors, and safe original
   operation tracking without automatic generation retries.
 
