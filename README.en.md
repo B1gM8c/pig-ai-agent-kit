@@ -4,7 +4,7 @@
 
 Pig AI Agent Kit is a fully independent, open-source client toolkit that lets MCP-capable clients such as Codex, Claude Desktop, and Cursor generate images and videos through the public Pig AI API.
 
-> **Rollout status:** The [`v0.1.0-beta.2`](https://github.com/B1gM8c/pig-ai-agent-kit/releases/tag/v0.1.0-beta.2) pre-release provides downloadable MCP, Skill, and checksum assets. The production API is available at the public Base URL `https://www.pigsec.cn/openapi/v1/ai`, and all public endpoints use `X-API-Key` authentication.
+> **Installation version:** The [`v0.1.0-beta.3`](https://github.com/B1gM8c/pig-ai-agent-kit/releases/tag/v0.1.0-beta.3) identifies this MCP, Skill, and checksum release; download its assets after the release build completes. The production API is available at the public Base URL `https://www.pigsec.cn/openapi/v1/ai`, and all public endpoints use `X-API-Key` authentication.
 
 This repository contains only:
 
@@ -28,7 +28,7 @@ Image and video generation uses the same server-side Pig AI points account as th
 
 ### 2. Download or build MCP
 
-Download the [`v0.1.0-beta.2`](https://github.com/B1gM8c/pig-ai-agent-kit/releases/tag/v0.1.0-beta.2) pre-release for macOS, Linux, or Windows on amd64/arm64. It also includes a source archive and [`checksums.txt`](https://github.com/B1gM8c/pig-ai-agent-kit/releases/download/v0.1.0-beta.2/checksums.txt). Verify the SHA-256 checksum before extracting the archive, then configure your host with the absolute path to `pig-ai-mcp` (`pig-ai-mcp.exe` on Windows).
+Download the [`v0.1.0-beta.3`](https://github.com/B1gM8c/pig-ai-agent-kit/releases/tag/v0.1.0-beta.3) pre-release for macOS, Linux, or Windows on amd64/arm64. It also includes a source archive and [`checksums.txt`](https://github.com/B1gM8c/pig-ai-agent-kit/releases/download/v0.1.0-beta.3/checksums.txt). Verify the SHA-256 checksum before extracting the archive, then configure your host with the absolute path to `pig-ai-mcp` (`pig-ai-mcp.exe` on Windows).
 
 You can also build from source with Go 1.26.10 or newer:
 
@@ -132,7 +132,7 @@ Save [examples/cursor-mcp.json](examples/cursor-mcp.json) as `.cursor/mcp.json` 
 
 ### 5. Install the Skill
 
-Download [`pig-ai-skill.zip`](https://github.com/B1gM8c/pig-ai-agent-kit/releases/download/v0.1.0-beta.2/pig-ai-skill.zip) and extract the installable `pig-ai` directory, or install it from a cloned checkout:
+Download [`pig-ai-skill.zip`](https://github.com/B1gM8c/pig-ai-agent-kit/releases/download/v0.1.0-beta.3/pig-ai-skill.zip) and extract the installable `pig-ai` directory, or install it from a cloned checkout:
 
 ```bash
 mkdir -p "$HOME/.agents/skills"
@@ -146,7 +146,7 @@ New-Item -ItemType Directory -Force "$HOME\.agents\skills" | Out-Null
 Copy-Item -Recurse -Force "skills\pig-ai" "$HOME\.agents\skills"
 ```
 
-The pre-release provides both `pig-ai-skill.zip` and the versioned `pig-ai-skill_0.1.0-beta.2.zip` archive. Use the fixed version URL above until the first stable release is published.
+The pre-release provides both `pig-ai-skill.zip` and the versioned `pig-ai-skill_0.1.0-beta.3.zip` archive. Use the fixed version URL above until the first stable release is published.
 
 For a repository-scoped Skill, copy `skills/pig-ai` to `.agents/skills/pig-ai` in that repository. Skill changes are normally detected automatically; restart the host if it does not appear.
 
@@ -177,12 +177,11 @@ A successful response lists current image and video capabilities. `list_models` 
 
 See the [Skill API contract](skills/pig-ai/references/api.md) for exact arguments and semantics. The public REST reference is available in the [Pig AI developer documentation](https://www.pigsec.cn/ai/developer/docs).
 
-## Dreamina / Seedance (current source)
+## Dreamina / Seedance
 
-The current source adds quote and media parameters for Dreamina images and
-Seedance videos. Existing download links still point to `v0.1.0-beta.2`; they do
-not imply that this pre-release contains these additions. Build the relevant
-source for these features and discover enabled capabilities with `list_models`.
+`v0.1.0-beta.3` adds quote and media parameters for Dreamina images and Seedance
+videos; the older `v0.1.0-beta.2` assets do not contain these additions. After
+upgrading, discover the capabilities enabled by the server with `list_models`.
 
 - Discover the model, obtain `quote_id` with `preview_billing`, then submit the identical specification with a stable idempotency key.
 - Pass workflows, resolution, custom image dimensions, first/last frames, keyframes, reference images, transitions, and HTTPS URLs of uploaded audio/video. Actual support and limits are model-specific; this MCP adapter has no audio/video binary upload tool.

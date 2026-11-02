@@ -4,7 +4,7 @@
 
 Pig AI Agent Kit 是一套完全独立、开源的客户端工具，让 Codex、Claude Desktop、Cursor 等支持 MCP 的客户端通过 Pig AI 公开 API 生成图片和视频。
 
-> **Rollout 状态：**[`v0.1.0-beta.2`](https://github.com/B1gM8c/pig-ai-agent-kit/releases/tag/v0.1.0-beta.2) 预发布版提供可下载的 MCP、Skill 和校验和。生产 API 已可用，公开 Base URL 为 `https://www.pigsec.cn/openapi/v1/ai`，所有公开接口使用 `X-API-Key` 认证。
+> **安装版本：**[`v0.1.0-beta.3`](https://github.com/B1gM8c/pig-ai-agent-kit/releases/tag/v0.1.0-beta.3) 对应本次 MCP、Skill 和校验和；请在该 Release 的构建完成后下载资产。生产 API 已可用，公开 Base URL 为 `https://www.pigsec.cn/openapi/v1/ai`，所有公开接口使用 `X-API-Key` 认证。
 
 本仓库只包含：
 
@@ -28,7 +28,7 @@ Pig AI Agent Kit 是一套完全独立、开源的客户端工具，让 Codex、
 
 ### 2. 下载或构建 MCP
 
-预发布安装包可从 [`v0.1.0-beta.2`](https://github.com/B1gM8c/pig-ai-agent-kit/releases/tag/v0.1.0-beta.2) 下载，包含 macOS、Linux、Windows 的 amd64/arm64 构建、源码包和 [`checksums.txt`](https://github.com/B1gM8c/pig-ai-agent-kit/releases/download/v0.1.0-beta.2/checksums.txt)。下载后请先核对 SHA-256，再解压并在客户端配置中使用 `pig-ai-mcp`（Windows 为 `pig-ai-mcp.exe`）的绝对路径。
+预发布安装包可从 [`v0.1.0-beta.3`](https://github.com/B1gM8c/pig-ai-agent-kit/releases/tag/v0.1.0-beta.3) 下载，包含 macOS、Linux、Windows 的 amd64/arm64 构建、源码包和 [`checksums.txt`](https://github.com/B1gM8c/pig-ai-agent-kit/releases/download/v0.1.0-beta.3/checksums.txt)。下载后请先核对 SHA-256，再解压并在客户端配置中使用 `pig-ai-mcp`（Windows 为 `pig-ai-mcp.exe`）的绝对路径。
 
 也可以使用 Go 1.26.10 或更高版本从源码构建：
 
@@ -132,7 +132,7 @@ Claude Desktop 的推荐分发形式是可将 API Key 标记为敏感字段的 `
 
 ### 5. 安装 Skill
 
-直接下载 [`pig-ai-skill.zip`](https://github.com/B1gM8c/pig-ai-agent-kit/releases/download/v0.1.0-beta.2/pig-ai-skill.zip)，解压后得到可安装的 `pig-ai` 目录。也可以从已克隆的源码安装：
+直接下载 [`pig-ai-skill.zip`](https://github.com/B1gM8c/pig-ai-agent-kit/releases/download/v0.1.0-beta.3/pig-ai-skill.zip)，解压后得到可安装的 `pig-ai` 目录。也可以从已克隆的源码安装：
 
 ```bash
 mkdir -p "$HOME/.agents/skills"
@@ -146,7 +146,7 @@ New-Item -ItemType Directory -Force "$HOME\.agents\skills" | Out-Null
 Copy-Item -Recurse -Force "skills\pig-ai" "$HOME\.agents\skills"
 ```
 
-预发布版同时提供固定文件名 `pig-ai-skill.zip` 和版本化归档 `pig-ai-skill_0.1.0-beta.2.zip`。首个稳定 Release 上线前，请使用上面的固定版本下载地址。
+预发布版同时提供固定文件名 `pig-ai-skill.zip` 和版本化归档 `pig-ai-skill_0.1.0-beta.3.zip`。首个稳定 Release 上线前，请使用上面的固定版本下载地址。
 
 项目内共享时，将 `skills/pig-ai` 复制到仓库的 `.agents/skills/pig-ai`。Skill 变更通常会被自动发现；未出现时请重启客户端。
 
@@ -177,11 +177,10 @@ Use $pig-ai to call list_models. Do not create any image or video.
 
 详细参数和返回语义见 [Skill API 契约](skills/pig-ai/references/api.md)。公开 REST 文档可在 [Pig AI 开发者文档](https://www.pigsec.cn/ai/developer/docs) 查看。
 
-## Dreamina / Seedance（当前源码）
+## Dreamina / Seedance
 
-当前源码补齐即梦图片和 Seedance 视频的报价与素材参数。现有下载链接仍指向
-`v0.1.0-beta.2`，不代表该预发布包已包含这些新增功能；使用新增能力需构建相应源码，
-并以服务端 `list_models` 返回的已启用能力为准。
+`v0.1.0-beta.3` 补齐即梦图片和 Seedance 视频的报价与素材参数；旧 `v0.1.0-beta.2`
+不包含这些新增能力。安装新版后，仍以服务端 `list_models` 返回的已启用能力为准。
 
 - 先查询模型，再用 `preview_billing` 获取 `quote_id`，以相同规格和稳定幂等键提交。
 - 支持工作流、分辨率、自定义图片尺寸、首尾帧、关键帧、参考图、转场，以及已上传音视频的 HTTPS 地址。素材能力和数量以具体模型为准；MCP 不提供音视频二进制上传工具。
