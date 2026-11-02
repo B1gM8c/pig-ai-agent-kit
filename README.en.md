@@ -30,7 +30,7 @@ Image and video generation uses the same server-side Pig AI points account as th
 
 Download the [`v0.1.0-beta.2`](https://github.com/B1gM8c/pig-ai-agent-kit/releases/tag/v0.1.0-beta.2) pre-release for macOS, Linux, or Windows on amd64/arm64. It also includes a source archive and [`checksums.txt`](https://github.com/B1gM8c/pig-ai-agent-kit/releases/download/v0.1.0-beta.2/checksums.txt). Verify the SHA-256 checksum before extracting the archive, then configure your host with the absolute path to `pig-ai-mcp` (`pig-ai-mcp.exe` on Windows).
 
-You can also build from source with Go 1.25.14 or newer:
+You can also build from source with Go 1.26.10 or newer:
 
 ```bash
 git clone https://github.com/B1gM8c/pig-ai-agent-kit.git

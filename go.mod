@@ -1,6 +1,6 @@
 module github.com/B1gM8c/pig-ai-agent-kit
 
-go 1.25.14
+go 1.26.10
 
 require github.com/modelcontextprotocol/go-sdk v1.8.0
 

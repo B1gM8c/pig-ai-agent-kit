@@ -30,7 +30,7 @@ Pig AI Agent Kit 是一套完全独立、开源的客户端工具，让 Codex、
 
 预发布安装包可从 [`v0.1.0-beta.2`](https://github.com/B1gM8c/pig-ai-agent-kit/releases/tag/v0.1.0-beta.2) 下载，包含 macOS、Linux、Windows 的 amd64/arm64 构建、源码包和 [`checksums.txt`](https://github.com/B1gM8c/pig-ai-agent-kit/releases/download/v0.1.0-beta.2/checksums.txt)。下载后请先核对 SHA-256，再解压并在客户端配置中使用 `pig-ai-mcp`（Windows 为 `pig-ai-mcp.exe`）的绝对路径。
 
-也可以使用 Go 1.25.14 或更高版本从源码构建：
+也可以使用 Go 1.26.10 或更高版本从源码构建：
 
 ```bash
 git clone https://github.com/B1gM8c/pig-ai-agent-kit.git
